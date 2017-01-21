@@ -1,0 +1,155 @@
+Imports System.Xml
+Imports System.IO
+Imports System.Threading
+Module Module1
+    Dim xmlDoc As New XmlDocument()
+    Dim patternL As String = "", srai As String = ""
+    Dim patternList As New DataTable
+    Sub Main()
+        'load all aiml in memorie
+        Console.Title = "DOCTOR_AIML - 0.2 - moz4r"
+        Console.ForegroundColor = ConsoleColor.Cyan
+
+        Console.WriteLine("DOCTOR AIML  0.2")
+
+        Console.ForegroundColor = ConsoleColor.Green
+        Console.WriteLine("                 __                      (R) - full integrity report")
+        Console.WriteLine("                | +|                     (U) - Tranform pattern to UPERCASE")
+        Console.WriteLine("             ,,,|__|                     (D) - Delete duplicated entries")
+        Console.WriteLine("             $$$ , ,                     (L) - Remove SRAI loops")
+        Console.WriteLine("            $$C    >                     (Q) - it will break spacetime")
+        Console.WriteLine("           $$$;  _<")
+        Console.WriteLine("       _______/ /_        ___")
+        Console.WriteLine("      |  |__` \~/o\  _,]-]___]----->")
+        Console.WriteLine("      | /  \(  )  )\/.-//")
+        Console.WriteLine("     _( \  )    / \  |")
+        Console.WriteLine("      //| /   ,/   \/")
+        Console.WriteLine("        '/   o \")
+        Console.WriteLine("        /     o \")
+        Console.WriteLine("       /______/\_\")
+        Console.WriteLine("       \   ||   /")
+        Console.WriteLine("        \  ||  /")
+        Console.WriteLine("         \ || /")
+        Console.WriteLine("         / )( \ ")
+        Console.WriteLine("         |/  \|")
+        Console.WriteLine("         :]  [:")
+        Console.WriteLine("         o|  |o")
+        Console.WriteLine("        /o|  |o\                      ")
+        Console.WriteLine("        `-'  `-'")
+
+        Console.ForegroundColor = ConsoleColor.Cyan
+
+
+        Do
+            '' Do something
+            ''...
+
+            If Console.KeyAvailable Then
+                If Console.ReadKey(True).KeyChar = "r" Then
+
+                    LoadFiles()
+
+
+
+                End If
+                If Console.ReadKey(True).KeyChar = "q" Then Exit Do
+
+
+
+            End If
+        Loop
+
+
+
+
+
+
+    End Sub
+    Function LoadFiles() As Integer
+        Console.Clear()
+        Console.WriteLine("Loading AIML files into ram... wait")
+        Console.WriteLine("")
+
+        patternList.Columns.Add("File")
+        patternList.Columns.Add("pattern")
+
+        Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inmoov\InmoovScript\bots\fr\aiml\")
+        ' Get a reference to each file in that directory.
+        Dim fiArr As FileInfo() = di.GetFiles()
+        ' Display the names of the files.
+        Dim fri As FileInfo
+        Dim i = 0
+        Dim errorA = 0
+        For Each fri In fiArr
+            i += 1
+
+            Try
+                xmlDoc.Load(fri.FullName)
+
+                Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
+
+
+                For Each node As XmlNode In nodes
+
+                    patternL = node.SelectSingleNode("pattern").InnerXml
+                    patternList.Rows.Add(fri.Name, patternL)
+                    'Console.WriteLine((pattern & " " & srai))
+                Next
+            Catch ex As Exception
+                Console.ForegroundColor = ConsoleColor.Red
+                Console.WriteLine("Hey dude cannot parse : " & fri.Name)
+                Console.WriteLine(ex.Message)
+                Console.ForegroundColor = ConsoleColor.White
+                Console.WriteLine("")
+                Console.WriteLine("The doctor cannot continue, please fix it yourself and retry")
+                Console.WriteLine("press ""Q"" to go home")
+                errorA = 1
+
+            End Try
+
+        Next fri
+
+        If errorA = 0 Then
+            Console.ForegroundColor = ConsoleColor.White
+            Console.WriteLine(i & " Files loaded with a lot of succes")
+            Console.WriteLine(" Say : AHHHHHHHHH and '33'")
+            Console.WriteLine("  ")
+            Thread.Sleep(2000)
+            checkRedondencie()
+        End If
+
+    End Function
+
+    Function checkRedondencie()
+        Dim redond = 0
+        Console.ForegroundColor = ConsoleColor.Cyan
+        Console.WriteLine("Check for redondencies ...")
+        Console.ForegroundColor = ConsoleColor.White
+        Dim tblDups = From r In patternList
+                      Group By Dups = New With {Key .pattern = CStr(r("pattern"))} Into Group
+                      Where Group.Count > 1
+                      Select Dups
+        Dim dupRowList = (From r In patternList
+                          Join dupRow In tblDups
+       On dupRow.pattern Equals CStr(r("pattern"))
+                          Select r).ToList()
+
+
+        For Each dup In dupRowList
+            redond = 1
+            Dim result() As DataRow = patternList.Select("pattern = '" & dup.Field(Of String)("pattern") & "' AND File <> '" & dup.Field(Of String)("File") & "'")
+
+            ' Loop and display.
+            For Each row As DataRow In result
+                Console.WriteLine("( " & row(0) & " + " & dup.Field(Of String)("File") & " ) : " & dup.Field(Of String)("pattern"))
+            Next
+
+
+        Next
+        If redond > 0 Then
+            Console.ForegroundColor = ConsoleColor.Red
+            Console.WriteLine("Wahoo there is redondancies, please fix them")
+        End If
+        Console.ReadLine()
+    End Function
+End Module
