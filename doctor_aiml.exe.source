@@ -5,12 +5,19 @@ Module Module1
     Dim xmlDoc As New XmlDocument()
     Dim patternL As String = "", srai As String = ""
     Dim patternList As New DataTable
+    Public fs As New FileStream("DOCTOR_AIML.log", FileMode.Create)
+    Public tmp As TextWriter = Console.Out
+    Public sw As New StreamWriter(fs)
+    Public noorphan = 1
     Sub Main()
         'load all aiml in memorie
-        Console.Title = "DOCTOR_AIML - 0.2 - moz4r"
+        sw.Close()
+
+        Console.SetOut(tmp)
+        Console.Title = "DOCTOR_AIML - 0.1 - moz4r"
         Console.ForegroundColor = ConsoleColor.Cyan
 
-        Console.WriteLine("DOCTOR AIML  0.2")
+        logs("DOCTOR AIML  0.2")
 
         Console.ForegroundColor = ConsoleColor.Green
         Console.WriteLine("                 __                      (R) - full integrity report")
@@ -36,30 +43,37 @@ Module Module1
         Console.WriteLine("         o|  |o")
         Console.WriteLine("        /o|  |o\                      ")
         Console.WriteLine("        `-'  `-'")
-
         Console.ForegroundColor = ConsoleColor.Cyan
 
 
+
+        '' Do something
+        ''...
         Do
-            '' Do something
-            ''...
-
-            If Console.KeyAvailable Then
-                If Console.ReadKey(True).KeyChar = "r" Then
-
-                    LoadFiles()
+            Dim Key = Console.ReadKey(True).KeyChar
+            If Key = "q" Then Environment.Exit(0)
+            If Key = "r" Then LoadFiles()
 
 
+            If Key = "u" Then
+                Console.Clear()
+                Console.WriteLine("NOT YET IMPLEMENTED")
+            End If
 
-                End If
-                If Console.ReadKey(True).KeyChar = "q" Then Exit Do
-
-
+            If Key = "d" Then
+                Console.Clear()
+                Console.WriteLine("NOT YET IMPLEMENTED")
 
             End If
+            If Key = "l" Then
+                Console.Clear()
+                Console.WriteLine("NOT YET IMPLEMENTED")
+
+            End If
+
+
+
         Loop
-
-
 
 
 
@@ -67,55 +81,75 @@ Module Module1
     End Sub
     Function LoadFiles() As Integer
         Console.Clear()
-        Console.WriteLine("Loading AIML files into ram... wait")
-        Console.WriteLine("")
+        logs("Loading AIML files into ram... wait")
+        logs("")
 
         patternList.Columns.Add("File")
         patternList.Columns.Add("pattern")
+        patternList.Columns.Add("srai")
+        Dim strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
 
-        Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inmoov\InmoovScript\bots\fr\aiml\")
+        'Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inmoov\InmoovScript\bots\fr\aiml\")
+        Dim di As New DirectoryInfo(strPath)
         ' Get a reference to each file in that directory.
         Dim fiArr As FileInfo() = di.GetFiles()
         ' Display the names of the files.
         Dim fri As FileInfo
         Dim i = 0
-        Dim errorA = 0
+        Dim errorA = 1
         For Each fri In fiArr
-            i += 1
 
-            Try
-                xmlDoc.Load(fri.FullName)
+            If Path.GetExtension(fri.FullName) = ".aiml" Then
+                errorA = 0
+                i += 1
+                Try
+                    xmlDoc.Load(fri.FullName)
 
-                Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
+                    Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
 
 
-                For Each node As XmlNode In nodes
-
-                    patternL = node.SelectSingleNode("pattern").InnerXml
-                    patternList.Rows.Add(fri.Name, patternL)
-                    'Console.WriteLine((pattern & " " & srai))
-                Next
-            Catch ex As Exception
-                Console.ForegroundColor = ConsoleColor.Red
-                Console.WriteLine("Hey dude cannot parse : " & fri.Name)
-                Console.WriteLine(ex.Message)
-                Console.ForegroundColor = ConsoleColor.White
-                Console.WriteLine("")
-                Console.WriteLine("The doctor cannot continue, please fix it yourself and retry")
-                Console.WriteLine("press ""Q"" to go home")
-                errorA = 1
-
-            End Try
-
+                    For Each node As XmlNode In nodes
+                        srai = ""
+                        Try
+                            srai = node.SelectSingleNode("template/srai").InnerXml
+                            If srai = "<star />" Or srai = "<star/>" Then srai = ""
+                            srai = srai.Replace("<star/>", "*").Replace("<star />", "*")
+                        Catch ex As Exception
+                            srai = ""
+                        End Try
+                        patternL = node.SelectSingleNode("pattern").InnerXml
+                        patternList.Rows.Add(fri.Name, patternL, srai)
+                        Console.WriteLine((patternL & " " & srai))
+                    Next
+                Catch ex As Exception
+                    Console.ForegroundColor = ConsoleColor.Red
+                    logs("Hey dude cannot parse : " & fri.Name)
+                    logs(ex.Message)
+                    Console.ForegroundColor = ConsoleColor.White
+                    logs("")
+                    logs("The doctor cannot continue, please fix it yourself and retry")
+                    Console.WriteLine("press ""Q"" to go home")
+                    errorA = 1
+                    Exit For
+                End Try
+            End If
         Next fri
 
-        If errorA = 0 Then
+        If errorA = 0 And i > 0 Then
             Console.ForegroundColor = ConsoleColor.White
-            Console.WriteLine(i & " Files loaded with a lot of succes")
-            Console.WriteLine(" Say : AHHHHHHHHH and '33'")
-            Console.WriteLine("  ")
+            logs(i & " Files loaded with a lot of succes")
+            logs(" Say : AHHHHHHHHH and '33'")
+            logs("  ")
             Thread.Sleep(2000)
             checkRedondencie()
+            Thread.Sleep(1000)
+            checkOrphanSRAI()
+
+        End If
+
+        If i = 0 Then
+            Console.ForegroundColor = ConsoleColor.White
+            logs(" Found 0 aiml files dude ...")
         End If
 
     End Function
@@ -123,7 +157,7 @@ Module Module1
     Function checkRedondencie()
         Dim redond = 0
         Console.ForegroundColor = ConsoleColor.Cyan
-        Console.WriteLine("Check for redondencies ...")
+        logs("Check for redondencies ...")
         Console.ForegroundColor = ConsoleColor.White
         Dim tblDups = From r In patternList
                       Group By Dups = New With {Key .pattern = CStr(r("pattern"))} Into Group
@@ -136,20 +170,79 @@ Module Module1
 
 
         For Each dup In dupRowList
-            redond = 1
+
             Dim result() As DataRow = patternList.Select("pattern = '" & dup.Field(Of String)("pattern") & "' AND File <> '" & dup.Field(Of String)("File") & "'")
 
             ' Loop and display.
             For Each row As DataRow In result
-                Console.WriteLine("( " & row(0) & " + " & dup.Field(Of String)("File") & " ) : " & dup.Field(Of String)("pattern"))
+                logs("( " & row(0) & " + " & dup.Field(Of String)("File") & " ) : " & dup.Field(Of String)("pattern"))
+                redond = 1
             Next
 
 
         Next
         If redond > 0 Then
             Console.ForegroundColor = ConsoleColor.Red
-            Console.WriteLine("Wahoo there is redondancies, please fix them")
+            logs("Wahoo there is redondancies, please fix them")
+
+        Else
+            logs("No redondencies, all is clean !")
         End If
+
+    End Function
+
+
+    Function checkOrphanSRAI()
+
+        Dim redond = 0
+        Console.ForegroundColor = ConsoleColor.Cyan
+        Console.Clear()
+        logs("Check for Orphans SRAI ...")
+
+        Thread.Sleep(1000)
+        Console.ForegroundColor = ConsoleColor.White
+        Dim result() As DataRow = patternList.Select("srai <> ''")
+
+
+        For Each row As DataRow In result
+            'logs(row(0))
+            Dim resultOrphan() As DataRow = patternList.Select("pattern = '" & row(0) & "'")
+
+            ' Loop and display.
+            Dim i = 0
+
+            For Each rowOrphan As DataRow In resultOrphan
+
+
+                i = 1
+            Next
+
+            If i = 0 Then
+                noorphan = 0
+                logs(row(0) & " > " & row(1))
+            End If
+
+        Next
+        If noorphan = 0 Then
+            Console.ForegroundColor = ConsoleColor.Red
+            logs("Wahoo there is too much srai orphans, please fix it !")
+
+        Else
+            Console.ForegroundColor = ConsoleColor.Green
+            logs("No orphans, all is clean !")
+        End If
+        Console.WriteLine(" ")
+        Console.WriteLine("Logfile created, it is your work now... ")
         Console.ReadLine()
+    End Function
+    Function logs(msg As String) As Integer
+        Using sw As StreamWriter = File.AppendText("DOCTOR_AIML.log")
+            Console.SetOut(sw)
+            Console.WriteLine(msg)
+            Console.SetOut(tmp)
+            Console.WriteLine(msg)
+
+        End Using
+
     End Function
 End Module
