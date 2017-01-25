@@ -181,18 +181,18 @@ Module Module1
                   Group e By Key = New With {.templateL = e("template")}.templateL,
                                    New With {.thatL = e("that")}.thatL,
                                    New With {.patternL = e("pattern")}.patternL Into Group Where Group.Count > 1
-                  Select New With {patternL}
+                  Select New With {patternL, templateL, thatL}
             )
 
 
 
         For Each dup In testQuery
-            Console.WriteLine(dup.patternL)
-            Dim result() As DataRow = patternList.Select("pattern = '" & dup.patternL & "'")
+
+            Dim result() As DataRow = patternList.Select("pattern = '" & dup.patternL & "' and that = '" & dup.thatL & "'")
 
             ' Loop and display.
             For Each row As DataRow In result
-                logs("( " & row(0) & " + " & row.Field(Of String)("FileNa") & " ) : " & row.Field(Of String)("pattern"))
+                logs("(" & row(0) & " + " & row.Field(Of String)("FileNa") & " ) :  " & row.Field(Of String)("template") & row.Field(Of String)("that"))
                 ' redond = 1
             Next
 
