@@ -3,7 +3,7 @@ Imports System.IO
 Imports System.Threading
 Module Module1
     Dim xmlDoc As New XmlDocument()
-    Dim patternL As String = "", srai As String = ""
+    Dim patternL As String = "", srai As String = "", templateL As String = "", that As String = ""
     Dim patternList As New DataTable
     Public fs As New FileStream("DOCTOR_AIML.log", FileMode.Create)
     Public tmp As TextWriter = Console.Out
@@ -84,9 +84,11 @@ Module Module1
         logs("Loading AIML files into ram... wait")
         logs("")
 
-        patternList.Columns.Add("File")
+        patternList.Columns.Add("FileNa")
         patternList.Columns.Add("pattern")
         patternList.Columns.Add("srai")
+        patternList.Columns.Add("template")
+        patternList.Columns.Add("that")
         Dim strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
 
         'Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inmoov\InmoovScript\bots\fr\aiml\")
@@ -110,6 +112,9 @@ Module Module1
 
                     For Each node As XmlNode In nodes
                         srai = ""
+                        that = ""
+                        templateL = ""
+
                         Try
                             srai = node.SelectSingleNode("template/srai").InnerXml
                             If srai = "<star />" Or srai = "<star/>" Then srai = ""
@@ -117,9 +122,18 @@ Module Module1
                         Catch ex As Exception
                             srai = ""
                         End Try
+
+                        Try
+                            that = node.SelectSingleNode("that").InnerXml
+                            If that = "<star />" Or that = "<star/>" Then that = ""
+                            that = that.Replace("<star/>", "*").Replace("<star />", "*")
+                        Catch ex As Exception
+                            that = ""
+                        End Try
                         patternL = node.SelectSingleNode("pattern").InnerXml
-                        patternList.Rows.Add(fri.Name, patternL, srai)
-                        Console.WriteLine((patternL & " " & srai))
+                        templateL = node.SelectSingleNode("template").InnerXml
+                        patternList.Rows.Add(fri.Name, patternL, srai, templateL, that)
+                        'Console.WriteLine(that)
                     Next
                 Catch ex As Exception
                     Console.ForegroundColor = ConsoleColor.Red
@@ -143,7 +157,7 @@ Module Module1
             Thread.Sleep(2000)
             checkRedondencie()
             Thread.Sleep(1000)
-            checkOrphanSRAI()
+            'checkOrphanSRAI()
 
         End If
 
@@ -159,24 +173,27 @@ Module Module1
         Console.ForegroundColor = ConsoleColor.Cyan
         logs("Check for redondencies ...")
         Console.ForegroundColor = ConsoleColor.White
-        Dim tblDups = From r In patternList
-                      Group By Dups = New With {Key .pattern = CStr(r("pattern"))} Into Group
-                      Where Group.Count > 1
-                      Select Dups
-        Dim dupRowList = (From r In patternList
-                          Join dupRow In tblDups
-       On dupRow.pattern Equals CStr(r("pattern"))
-                          Select r).ToList()
 
 
-        For Each dup In dupRowList
 
-            Dim result() As DataRow = patternList.Select("pattern = '" & dup.Field(Of String)("pattern") & "' AND File <> '" & dup.Field(Of String)("File") & "'")
+        Dim testQuery =
+                 (From e In patternList.AsEnumerable()
+                  Group e By Key = New With {.templateL = e("template")}.templateL,
+                                   New With {.thatL = e("that")}.thatL,
+                                   New With {.patternL = e("pattern")}.patternL Into Group Where Group.Count > 1
+                  Select New With {patternL}
+            )
+
+
+
+        For Each dup In testQuery
+            Console.WriteLine(dup.patternL)
+            Dim result() As DataRow = patternList.Select("pattern = '" & dup.patternL & "'")
 
             ' Loop and display.
             For Each row As DataRow In result
-                logs("( " & row(0) & " + " & dup.Field(Of String)("File") & " ) : " & dup.Field(Of String)("pattern"))
-                redond = 1
+                logs("( " & row(0) & " + " & row.Field(Of String)("FileNa") & " ) : " & row.Field(Of String)("pattern"))
+                ' redond = 1
             Next
 
 
@@ -190,6 +207,7 @@ Module Module1
         End If
 
     End Function
+
 
 
     Function checkOrphanSRAI()
