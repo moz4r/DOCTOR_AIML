@@ -47,7 +47,7 @@ Module Module1
 
 
 
-        '' Do something
+        '' MENU
         ''...
         Do
             Dim Key = Console.ReadKey(True).KeyChar
@@ -91,8 +91,8 @@ Module Module1
         patternList.Columns.Add("that")
         Dim strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
 
-        'Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inmoov\InmoovScript\bots\fr\aiml\")
-        Dim di As New DirectoryInfo(strPath)
+        Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inm_fr\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml\doctor")
+        'Dim di As New DirectoryInfo(strPath)
         ' Get a reference to each file in that directory.
         Dim fiArr As FileInfo() = di.GetFiles()
         ' Display the names of the files.
@@ -104,6 +104,8 @@ Module Module1
             If Path.GetExtension(fri.FullName) = ".aiml" Then
                 errorA = 0
                 i += 1
+                Console.WriteLine(fri.Name)
+
                 Try
                     xmlDoc.Load(fri.FullName)
 
@@ -114,6 +116,7 @@ Module Module1
                         srai = ""
                         that = ""
                         templateL = ""
+                        patternL = ""
 
                         Try
                             srai = node.SelectSingleNode("template/srai").InnerXml
@@ -134,7 +137,13 @@ Module Module1
                         templateL = node.SelectSingleNode("template").InnerXml
                         patternList.Rows.Add(fri.Name, patternL, srai, templateL, that)
                         'Console.WriteLine(that)
+                        'TODO AUTOMEDICATION
+                        If patternL = "BIEN SÛR QUE TU LE FAIS" Then node.ParentNode.RemoveChild(node)
+
                     Next
+
+
+
                 Catch ex As Exception
                     Console.ForegroundColor = ConsoleColor.Red
                     logs("Hey dude cannot parse : " & fri.Name)
@@ -174,28 +183,35 @@ Module Module1
         logs("Check for redondencies ...")
         Console.ForegroundColor = ConsoleColor.White
 
+        Dim query = From row In patternList.AsEnumerable()
+                    Group row By Group = New With {
+        Key .pattern = row("pattern"),
+        Key .template = row("template"),
+        Key .that = row("that")
+   } Into NameGroup = Group Where NameGroup.Count > 1
+                    Select New With {
+       .pattern = Group.pattern,
+        .that = Group.that,
+       .template = Group.template}
 
 
-        Dim testQuery =
-                 (From e In patternList.AsEnumerable()
-                  Group e By Key = New With {.templateL = e("template")}.templateL,
-                                   New With {.thatL = e("that")}.thatL,
-                                   New With {.patternL = e("pattern")}.patternL Into Group Where Group.Count > 1
-                  Select New With {patternL, templateL, thatL}
-            )
 
 
+        For Each dup In query
 
-        For Each dup In testQuery
 
-            Dim result() As DataRow = patternList.Select("pattern = '" & dup.patternL & "' and that = '" & dup.thatL & "'")
+            Dim result() As DataRow = patternList.Select("pattern = '" & dup.pattern & "'")
 
             ' Loop and display.
-            For Each row As DataRow In result
-                logs("(" & row(0) & " + " & row.Field(Of String)("FileNa") & " ) :  " & row.Field(Of String)("template") & row.Field(Of String)("that"))
-                ' redond = 1
-            Next
+            For Each row As DataRow In result.Take(1)
+                logs("( File : " & row(0) & " ) :  ")
+                logs("pattern:" & row.Field(Of String)("pattern"))
+                logs("template:" & row.Field(Of String)("template"))
+                logs("that:" & row.Field(Of String)("that"))
+                logs("-----------------------")
 
+                redond = 1
+            Next
 
         Next
         If redond > 0 Then
