@@ -9,6 +9,10 @@ Module Module1
     Public tmp As TextWriter = Console.Out
     Public sw As New StreamWriter(fs)
     Public noorphan = 1
+    Public i = 0
+
+    Public rapport = 0
+    Public errorA = 1
     Sub Main()
         'load all aiml in memorie
         sw.Close()
@@ -21,11 +25,11 @@ Module Module1
 
         Console.ForegroundColor = ConsoleColor.Green
         Console.WriteLine("                 __                      (R) - full integrity report")
-        Console.WriteLine("                | +|                     (U) - Tranform pattern to UPERCASE")
-        Console.WriteLine("             ,,,|__|                     (D) - Delete duplicated entries")
+        Console.WriteLine("                | +|                     (I) - Indentation FIx")
+        Console.WriteLine("             ,,,|__|                     (U) - Tranform pattern to UPERCASE")
         Console.WriteLine("             $$$ , ,                     (L) - Remove SRAI loops")
         Console.WriteLine("            $$C    >                     (Q) - it will break spacetime")
-        Console.WriteLine("           $$$;  _<")
+        Console.WriteLine("           $$$;  _<                      (D) - Delete duplicated entries")
         Console.WriteLine("       _______/ /_        ___")
         Console.WriteLine("      |  |__` \~/o\  _,]-]___]----->")
         Console.WriteLine("      | /  \(  )  )\/.-//")
@@ -52,8 +56,8 @@ Module Module1
         Do
             Dim Key = Console.ReadKey(True).KeyChar
             If Key = "q" Then Environment.Exit(0)
-            If Key = "r" Then LoadFiles()
-
+            If Key = "r" Then LoadFiles("rapport")
+            If Key = "i" Then LoadFiles("indentation")
 
             If Key = "u" Then
                 Console.Clear()
@@ -79,7 +83,8 @@ Module Module1
 
 
     End Sub
-    Function LoadFiles() As Integer
+    Function LoadFiles(Optional FunctionType = "0") As Integer
+
         Console.Clear()
         logs("Loading AIML files into ram... wait")
         logs("")
@@ -91,71 +96,18 @@ Module Module1
         patternList.Columns.Add("that")
         Dim strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
 
-        Dim di As New DirectoryInfo("C:\Users\moz4r\Documents\GitHub\inm_fr\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml\doctor")
+        Dim di As New DirectoryInfo("C:\Users\agallot\Documents\GitHub\inmouv-france\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml\")
         'Dim di As New DirectoryInfo(strPath)
         ' Get a reference to each file in that directory.
         Dim fiArr As FileInfo() = di.GetFiles()
         ' Display the names of the files.
         Dim fri As FileInfo
-        Dim i = 0
-        Dim errorA = 1
+        Dim rep
         For Each fri In fiArr
-
-            If Path.GetExtension(fri.FullName) = ".aiml" Then
-                errorA = 0
-                i += 1
-                Console.WriteLine(fri.Name)
-
-                Try
-                    xmlDoc.Load(fri.FullName)
-
-                    Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
+            rep = parse(fri, FunctionType)
+            If rep = 0 Then Exit For
 
 
-                    For Each node As XmlNode In nodes
-                        srai = ""
-                        that = ""
-                        templateL = ""
-                        patternL = ""
-
-                        Try
-                            srai = node.SelectSingleNode("template/srai").InnerXml
-                            If srai = "<star />" Or srai = "<star/>" Then srai = ""
-                            srai = srai.Replace("<star/>", "*").Replace("<star />", "*")
-                        Catch ex As Exception
-                            srai = ""
-                        End Try
-
-                        Try
-                            that = node.SelectSingleNode("that").InnerXml
-                            If that = "<star />" Or that = "<star/>" Then that = ""
-                            that = that.Replace("<star/>", "*").Replace("<star />", "*")
-                        Catch ex As Exception
-                            that = ""
-                        End Try
-                        patternL = node.SelectSingleNode("pattern").InnerXml
-                        templateL = node.SelectSingleNode("template").InnerXml
-                        patternList.Rows.Add(fri.Name, patternL, srai, templateL, that)
-                        'Console.WriteLine(that)
-                        'TODO AUTOMEDICATION
-                        If patternL = "BIEN SÛR QUE TU LE FAIS" Then node.ParentNode.RemoveChild(node)
-
-                    Next
-
-
-
-                Catch ex As Exception
-                    Console.ForegroundColor = ConsoleColor.Red
-                    logs("Hey dude cannot parse : " & fri.Name)
-                    logs(ex.Message)
-                    Console.ForegroundColor = ConsoleColor.White
-                    logs("")
-                    logs("The doctor cannot continue, please fix it yourself and retry")
-                    Console.WriteLine("press ""Q"" to go home")
-                    errorA = 1
-                    Exit For
-                End Try
-            End If
         Next fri
 
         If errorA = 0 And i > 0 Then
@@ -164,8 +116,12 @@ Module Module1
             logs(" Say : AHHHHHHHHH and '33'")
             logs("  ")
             Thread.Sleep(2000)
-            checkRedondencie()
-            Thread.Sleep(1000)
+
+            If FunctionType = "rapport" Then
+
+                checkRedondencie()
+                Thread.Sleep(1000)
+            End If
             'checkOrphanSRAI()
 
         End If
@@ -176,7 +132,78 @@ Module Module1
         End If
 
     End Function
+    Function parse(fri, Optional FunctionType = "0", Optional FileNa = "", Optional pattern = "", Optional srai = "", Optional template = "", Optional that = "")
 
+        If Path.GetExtension(fri.FullName) = ".aiml" Then
+            errorA = 0
+            i += 1
+            Console.WriteLine(fri.Name)
+
+            Try
+                xmlDoc.Load(fri.FullName)
+
+
+                Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
+
+
+                For Each node As XmlNode In nodes
+                    srai = ""
+                    that = ""
+                    templateL = ""
+                    patternL = ""
+
+                    Try
+                        srai = node.SelectSingleNode("template/srai").InnerXml
+                        If srai = "<star />" Or srai = "<star/>" Then srai = ""
+                        srai = srai.Replace("<star/>", "*").Replace("<star />", "*")
+                    Catch ex As Exception
+                        srai = ""
+                    End Try
+
+                    Try
+                        that = node.SelectSingleNode("that").InnerXml
+                        If that = "<star />" Or that = "<star/>" Then that = ""
+                        that = that.Replace("<star/>", "*").Replace("<star />", "*")
+                    Catch ex As Exception
+                        that = ""
+                    End Try
+                    patternL = node.SelectSingleNode("pattern").InnerXml
+                    templateL = node.SelectSingleNode("template").InnerXml
+                    patternList.Rows.Add(fri.Name, patternL, srai, templateL, that)
+                    'Console.WriteLine(that)
+                    'TODO AUTOMEDICATION
+                    If patternL = "011BIEN SÛR QUE TU LE FAIS" Then
+                        node.ParentNode.RemoveChild(node)
+
+                        xmlDoc.Save(fri.FullName)
+                        patternL = ""
+                    End If
+
+                    If FunctionType = "indentation" Then
+                        System.IO.File.Delete(fri.FullName)
+                        xmlDoc.Save(fri.FullName)
+                        'Console.WriteLine(fri.FullName)
+                    End If
+
+                Next
+
+
+
+            Catch ex As Exception
+                Console.ForegroundColor = ConsoleColor.Red
+                logs("Hey dude cannot parse :  " & fri.Name)
+                logs(ex.Message)
+                Console.ForegroundColor = ConsoleColor.White
+                logs("")
+                logs("The doctor cannot continue, please fix it yourself and retry")
+                Console.WriteLine("press ""Q"" to go home")
+                errorA = 1
+                Return 0
+            End Try
+
+        End If
+        Return 1
+    End Function
     Function checkRedondencie()
         Dim redond = 0
         Console.ForegroundColor = ConsoleColor.Cyan
