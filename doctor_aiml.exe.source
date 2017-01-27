@@ -32,8 +32,8 @@ Module Module1
         Console.WriteLine("             $$$ , ,                     (L) - Remove SRAI loops")
         Console.WriteLine("            $$C    >                     (Q) - it will break spacetime")
         Console.WriteLine("           $$$;  _<                      (D) - Delete duplicated entries")
-        Console.WriteLine("       _______/ /_        ___")
-        Console.WriteLine("      |  |__` \~/o\  _,]-]___]----->")
+        Console.WriteLine("       _______/ /_        __             (A) - REMOVE ' INTO srai+pattern")
+        Console.WriteLine("      |  |__` \~/o\  _,]-]___]----->     (T) - REMOVE - INTO srai+pattern")
         Console.WriteLine("      | /  \(  )  )\/.-//")
         Console.WriteLine("     _( \  )    / \  |")
         Console.WriteLine("      //| /   ,/   \/")
@@ -64,6 +64,9 @@ Module Module1
             If Key = "u" Then LoadFiles("ucase")
 
             If Key = "d" Then LoadFiles("Redondencie")
+
+            If Key = "a" Then LoadFiles("quote")
+            If Key = "t" Then LoadFiles("dash")
 
             If Key = "l" Then
                 Console.Clear()
@@ -168,6 +171,14 @@ Module Module1
                     End Try
 
                     Try
+                        If FunctionType = "quote" Then node.SelectSingleNode("template/srai").InnerXml = node.SelectSingleNode("template/srai").InnerXml.Replace("'", " ")
+                        If FunctionType = "dash" Then node.SelectSingleNode("template/srai").InnerXml = node.SelectSingleNode("template/srai").InnerXml.Replace("-", " ")
+
+
+                    Catch
+                    End Try
+
+                    Try
                         thatL = node.SelectSingleNode("that").InnerXml
                         If thatL = "<star />" Or thatL = "<star/>" Then thatL = ""
                         thatL = thatL.Replace("<star/>", "*").Replace("<star />", "*")
@@ -176,13 +187,23 @@ Module Module1
                     End Try
                     patternL = node.SelectSingleNode("pattern").InnerXml
 
+                    If FunctionType = "quote" Then node.SelectSingleNode("pattern").InnerText = node.SelectSingleNode("pattern").InnerText.Replace("'", " ")
+                    If FunctionType = "dash" Then node.SelectSingleNode("pattern").InnerText = node.SelectSingleNode("pattern").InnerText.Replace("-", " ")
 
                     If FunctionType = "ucase" Then
                         node.SelectSingleNode("pattern").InnerXml = patternL.ToUpper
+                        node.SelectSingleNode("pattern").InnerXml = node.SelectSingleNode("pattern").InnerXml.Replace(".<", "<")
+                        Try
+                            If sraiL <> "" Then
+                                ' node.SelectSingleNode("template/srai").InnerXml = node.SelectSingleNode("template/srai").InnerXml.Replace(".</srai>", "</srai>")
 
+                            End If
 
+                        Catch
+                        End Try
                     End If
                     templateL = node.SelectSingleNode("template").InnerXml
+
                     patternList.Rows.Add(FriName, patternL, sraiL, templateL, thatL)
 
 
@@ -196,7 +217,7 @@ Module Module1
 
                 Next
 
-                If FunctionType = "indentation" Or FunctionType = "RedondencieMedication" Or FunctionType = "ucase" Then
+                If FunctionType = "indentation" Or FunctionType = "quote" Or FunctionType = "dash" Or FunctionType = "RedondencieMedication" Or FunctionType = "ucase" Then
                     System.IO.File.Delete(FriFullName)
                     xmlDoc.Save(FriFullName)
                     'Console.WriteLine(fri.FullName)
