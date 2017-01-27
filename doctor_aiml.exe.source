@@ -20,10 +20,10 @@ Module Module1
         sw.Close()
 
         Console.SetOut(tmp)
-        Console.Title = "DOCTOR_AIML - 0.1 - moz4r"
+        Console.Title = "DOCTOR_AIML - 0.3 - moz4r"
         Console.ForegroundColor = ConsoleColor.Cyan
 
-        logs("DOCTOR AIML  0.2")
+        logs("DOCTOR AIML  0.3")
 
         Console.ForegroundColor = ConsoleColor.Green
         Console.WriteLine("                 __                      (R) - full integrity report")
@@ -201,7 +201,7 @@ Module Module1
                     xmlDoc.Save(FriFullName)
                     'Console.WriteLine(fri.FullName)
                     Console.ForegroundColor = ConsoleColor.Green
-                    Console.WriteLine(FriName & " > MODIFICATIONS OK")
+                    logs(FriName & " > MODIFICATIONS OK")
                     Console.ForegroundColor = ConsoleColor.White
                 End If
 
@@ -246,8 +246,8 @@ Module Module1
 
         For Each dup In query
 
-
-            Dim result() As DataRow = patternList.Select("pattern = '" & dup.pattern & "'")
+            Console.WriteLine("pattern = '" & dup.pattern & "' and template = '" & dup.template.Replace("'", "''") & "' and that = '" & dup.that.Replace("'", "''") & "'")
+            Dim result() As DataRow = patternList.Select("pattern = '" & dup.pattern & "' and template = '" & dup.template.Replace("'", "''") & "' and that = '" & dup.that.Replace("'", "''") & "'")
 
             ' Loop and display.
             For Each row As DataRow In result.Take(1)
