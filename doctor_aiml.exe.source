@@ -1,4 +1,4 @@
-Imports System.Xml
+'Imports System.Xml
 Imports System.IO
 Imports System.Threading
 Module Module1
@@ -10,8 +10,8 @@ Module Module1
     Public sw As New StreamWriter(fs)
     Public noorphan = 1
     Public i = 0
-    'Public strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
-    Public strPath As String = "C:\Users\agallot\Documents\GitHub\inmouv-france\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml"
+    Public strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
+    'Public strPath As String = "C:\Users\agallot\Documents\GitHub\inmouv-france\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml"
 
     Public rapport = 0
     Public errorA = 1
