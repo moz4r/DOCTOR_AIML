@@ -3,13 +3,15 @@ Imports System.IO
 Imports System.Threading
 Module Module1
     Dim xmlDoc As New XmlDocument()
-    Dim patternL As String = "", srai As String = "", templateL As String = "", that As String = ""
+    Dim patternL As String = "", sraiL As String = "", templateL As String = "", thatL As String = ""
     Dim patternList As New DataTable
     Public fs As New FileStream("DOCTOR_AIML.log", FileMode.Create)
     Public tmp As TextWriter = Console.Out
     Public sw As New StreamWriter(fs)
     Public noorphan = 1
     Public i = 0
+    'Public strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
+    Public strPath As String = "C:\Users\agallot\Documents\GitHub\inmouv-france\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml"
 
     Public rapport = 0
     Public errorA = 1
@@ -59,16 +61,10 @@ Module Module1
             If Key = "r" Then LoadFiles("rapport")
             If Key = "i" Then LoadFiles("indentation")
 
-            If Key = "u" Then
-                Console.Clear()
-                Console.WriteLine("NOT YET IMPLEMENTED")
-            End If
+            If Key = "u" Then LoadFiles("ucase")
 
-            If Key = "d" Then
-                Console.Clear()
-                Console.WriteLine("NOT YET IMPLEMENTED")
+            If Key = "d" Then LoadFiles("Redondencie")
 
-            End If
             If Key = "l" Then
                 Console.Clear()
                 Console.WriteLine("NOT YET IMPLEMENTED")
@@ -94,9 +90,9 @@ Module Module1
         patternList.Columns.Add("srai")
         patternList.Columns.Add("template")
         patternList.Columns.Add("that")
-        Dim strPath As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).Replace("file:\", "")
 
-        Dim di As New DirectoryInfo("C:\Users\agallot\Documents\GitHub\inmouv-france\inmoov\InmoovScript\inmoovVocal\bots\fr\aiml\")
+
+        Dim di As New DirectoryInfo(strPath)
         'Dim di As New DirectoryInfo(strPath)
         ' Get a reference to each file in that directory.
         Dim fiArr As FileInfo() = di.GetFiles()
@@ -112,14 +108,15 @@ Module Module1
 
         If errorA = 0 And i > 0 Then
             Console.ForegroundColor = ConsoleColor.White
+            logs("  ")
             logs(i & " Files loaded with a lot of succes")
             logs(" Say : AHHHHHHHHH and '33'")
             logs("  ")
             Thread.Sleep(2000)
 
-            If FunctionType = "rapport" Then
+            If FunctionType = "rapport" Or FunctionType = "Redondencie" Then
 
-                checkRedondencie()
+                checkRedondencie(FunctionType)
                 Thread.Sleep(1000)
             End If
             'checkOrphanSRAI()
@@ -132,66 +129,86 @@ Module Module1
         End If
 
     End Function
-    Function parse(fri, Optional FunctionType = "0", Optional FileNa = "", Optional pattern = "", Optional srai = "", Optional template = "", Optional that = "")
+    Function parse(fri, Optional FunctionType = "0", Optional FileN = "0", Optional pattern = "", Optional srai = "", Optional template = "", Optional that = "")
+        Dim ext = ""
+        Dim FriName = ""
+        Dim FriFullName = ""
 
-        If Path.GetExtension(fri.FullName) = ".aiml" Then
+        If FileN = "0" Then
+            ext = Path.GetExtension(fri.FullName)
+            FriName = fri.Name
+            FriFullName = fri.FullName
+        Else
+            ext = ".aiml"
+            FriName = FileN
+            FriFullName = strPath & "\" & FileN
+        End If
+
+        If ext = ".aiml" Then
             errorA = 0
             i += 1
-            Console.WriteLine(fri.Name)
+            Console.WriteLine(FriName)
 
             Try
-                xmlDoc.Load(fri.FullName)
-
-
+                xmlDoc.Load(FriFullName)
                 Dim nodes As XmlNodeList = xmlDoc.DocumentElement.SelectNodes("/aiml/category")
-
-
                 For Each node As XmlNode In nodes
-                    srai = ""
-                    that = ""
+
+                    sraiL = ""
+                    thatL = ""
                     templateL = ""
                     patternL = ""
 
                     Try
-                        srai = node.SelectSingleNode("template/srai").InnerXml
-                        If srai = "<star />" Or srai = "<star/>" Then srai = ""
-                        srai = srai.Replace("<star/>", "*").Replace("<star />", "*")
+                        sraiL = node.SelectSingleNode("template/srai").InnerXml
+                        If sraiL = "<star />" Or sraiL = "<star/>" Then sraiL = ""
+                        sraiL = sraiL.Replace("<star/>", "*").Replace("<star />", "*")
                     Catch ex As Exception
-                        srai = ""
+                        sraiL = ""
                     End Try
 
                     Try
-                        that = node.SelectSingleNode("that").InnerXml
-                        If that = "<star />" Or that = "<star/>" Then that = ""
-                        that = that.Replace("<star/>", "*").Replace("<star />", "*")
+                        thatL = node.SelectSingleNode("that").InnerXml
+                        If thatL = "<star />" Or thatL = "<star/>" Then thatL = ""
+                        thatL = thatL.Replace("<star/>", "*").Replace("<star />", "*")
                     Catch ex As Exception
-                        that = ""
+                        thatL = ""
                     End Try
                     patternL = node.SelectSingleNode("pattern").InnerXml
+
+
+                    If FunctionType = "ucase" Then
+                        node.SelectSingleNode("pattern").InnerXml = patternL.ToUpper
+
+
+                    End If
                     templateL = node.SelectSingleNode("template").InnerXml
-                    patternList.Rows.Add(fri.Name, patternL, srai, templateL, that)
-                    'Console.WriteLine(that)
-                    'TODO AUTOMEDICATION
-                    If patternL = "011BIEN SÛR QUE TU LE FAIS" Then
-                        node.ParentNode.RemoveChild(node)
+                    patternList.Rows.Add(FriName, patternL, sraiL, templateL, thatL)
 
-                        xmlDoc.Save(fri.FullName)
-                        patternL = ""
+
+                    If FunctionType = "RedondencieMedication" Then
+                        If patternL = pattern And templateL = template And thatL = that Then
+                            node.ParentNode.RemoveChild(node)
+                            Exit For
+                        End If
                     End If
 
-                    If FunctionType = "indentation" Then
-                        System.IO.File.Delete(fri.FullName)
-                        xmlDoc.Save(fri.FullName)
-                        'Console.WriteLine(fri.FullName)
-                    End If
 
                 Next
 
+                If FunctionType = "indentation" Or FunctionType = "RedondencieMedication" Or FunctionType = "ucase" Then
+                    System.IO.File.Delete(FriFullName)
+                    xmlDoc.Save(FriFullName)
+                    'Console.WriteLine(fri.FullName)
+                    Console.ForegroundColor = ConsoleColor.Green
+                    Console.WriteLine(FriName & " > MODIFICATIONS OK")
+                    Console.ForegroundColor = ConsoleColor.White
+                End If
 
 
             Catch ex As Exception
                 Console.ForegroundColor = ConsoleColor.Red
-                logs("Hey dude cannot parse :  " & fri.Name)
+                logs("Hey dude cannot parse :  " & FriName)
                 logs(ex.Message)
                 Console.ForegroundColor = ConsoleColor.White
                 logs("")
@@ -204,7 +221,10 @@ Module Module1
         End If
         Return 1
     End Function
-    Function checkRedondencie()
+    Function checkRedondencie(Optional FunctionType = "0")
+
+
+
         Dim redond = 0
         Console.ForegroundColor = ConsoleColor.Cyan
         logs("Check for redondencies ...")
@@ -236,12 +256,12 @@ Module Module1
                 logs("template:" & row.Field(Of String)("template"))
                 logs("that:" & row.Field(Of String)("that"))
                 logs("-----------------------")
-
                 redond = 1
+                If FunctionType = "Redondencie" Then parse(0, "RedondencieMedication", row(0), row.Field(Of String)("pattern"), "", row.Field(Of String)("template"), row.Field(Of String)("that"))
             Next
 
         Next
-        If redond > 0 Then
+        If redond > 0 And FunctionType = "rapport" Then
             Console.ForegroundColor = ConsoleColor.Red
             logs("Wahoo there is redondancies, please fix them")
 
