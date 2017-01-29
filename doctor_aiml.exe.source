@@ -68,11 +68,7 @@ Module Module1
             If Key = "a" Then LoadFiles("quote")
             If Key = "t" Then LoadFiles("dash")
 
-            If Key = "l" Then
-                Console.Clear()
-                Console.WriteLine("NOT YET IMPLEMENTED")
-
-            End If
+            If Key = "l" Then LoadFiles("loops")
 
 
 
@@ -122,7 +118,8 @@ Module Module1
                 checkRedondencie(FunctionType)
                 Thread.Sleep(1000)
             End If
-            'checkOrphanSRAI()
+            If FunctionType = "rapport" Then checkOrphanSRAI()
+            If FunctionType = "rapport" Or FunctionType = "loops" Then checkLOOPS(FunctionType)
 
         End If
 
@@ -207,7 +204,8 @@ Module Module1
                     patternList.Rows.Add(FriName, patternL, sraiL, templateL, thatL)
 
 
-                    If FunctionType = "RedondencieMedication" Then
+                    If FunctionType = "RedondencieMedication" Or FunctionType = "loopMedication" Then
+
                         If patternL = pattern And templateL = template And thatL = that Then
                             node.ParentNode.RemoveChild(node)
                             Exit For
@@ -217,7 +215,7 @@ Module Module1
 
                 Next
 
-                If FunctionType = "indentation" Or FunctionType = "quote" Or FunctionType = "dash" Or FunctionType = "RedondencieMedication" Or FunctionType = "ucase" Then
+                If FunctionType = "indentation" Or FunctionType = "quote" Or FunctionType = "dash" Or FunctionType = "RedondencieMedication" Or FunctionType = "loopMedication" Or FunctionType = "ucase" Then
                     System.IO.File.Delete(FriFullName)
                     xmlDoc.Save(FriFullName)
                     'Console.WriteLine(fri.FullName)
@@ -308,7 +306,7 @@ Module Module1
 
         For Each row As DataRow In result
             'logs(row(0))
-            Dim resultOrphan() As DataRow = patternList.Select("pattern = '" & row(0) & "'")
+            Dim resultOrphan() As DataRow = patternList.Select("pattern = '" & row(2) & "'")
 
             ' Loop and display.
             Dim i = 0
@@ -321,7 +319,13 @@ Module Module1
 
             If i = 0 Then
                 noorphan = 0
-                logs(row(0) & " > " & row(1))
+                logs(row(0) & " > " & row(1) & " ( srai : " & row(2) & " ) ")
+
+                Console.ForegroundColor = ConsoleColor.Red
+                logs(" > srai : " & row(2) & " ) ")
+
+                Console.ForegroundColor = ConsoleColor.White
+                logs("----------------------------")
             End If
 
         Next
@@ -332,6 +336,50 @@ Module Module1
         Else
             Console.ForegroundColor = ConsoleColor.Green
             logs("No orphans, all is clean !")
+        End If
+        Console.WriteLine(" ")
+        Console.WriteLine("Logfile created, it is your work now... ")
+
+    End Function
+
+    Function checkLOOPS(Optional FunctionType = "0")
+
+        Dim loops = 0
+        Console.ForegroundColor = ConsoleColor.Cyan
+        Console.Clear()
+        logs("Check for loops ...")
+
+        Thread.Sleep(1000)
+        Console.ForegroundColor = ConsoleColor.White
+        Dim result() As DataRow = patternList.Select("srai <> ''")
+
+
+        For Each row As DataRow In result
+            'logs(row(0))
+            If row(2) = row(1) Then
+                logs(row(0))
+                logs(" > loop : " & row(2) & " ) ")
+
+                If FunctionType = "loops" Then
+                    parse(0, "loopMedication", row(0), row.Field(Of String)("pattern"), "", row.Field(Of String)("template"), row.Field(Of String)("that"))
+
+                End If
+                loops = 1
+
+            End If
+
+
+
+
+        Next
+
+        If loops = 1 Then
+            Console.ForegroundColor = ConsoleColor.Red
+            logs("Wahoo there is too much loops, please fix it !")
+
+        Else
+            Console.ForegroundColor = ConsoleColor.Green
+            logs("No loops, all is clean !")
         End If
         Console.WriteLine(" ")
         Console.WriteLine("Logfile created, it is your work now... ")
