@@ -1,6 +1,10 @@
 # InMooV - Service launcher v 0.9.9   
 
-This is the full configurable launcher script for Inmoov service
+This is the full configurable internationnal launcher script for Inmoov service.  
+Worky out of the box with standardized InMoov hardware configuration.  
+At this time ( v 1.0.0 ) , configurable things are inside the config folder.  
+
+![virtual inmoov screenshot](http://www.myai.cloud/pic/main.png)
 
 ## Getting Started
 MORE informations here : http://myrobotlab.org/service/InMoov  
@@ -28,6 +32,9 @@ If you setup 2 arduino + configs in skeleton folder, it can run full Inmoov or s
 http://myrobotlab.org/service/InMoov  
   
 bugs report : https://github.com/MyRobotLab/inmoov/issues  
+
+### CONTRIBUTION  
+Is welcome :)
   
 ### CHANGELOG  
    
