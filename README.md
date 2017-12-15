@@ -7,6 +7,8 @@ MORE informations here : http://myrobotlab.org/service/InMoov
   
 At this time configurable things are inside the config folder.  
 By default virtual environment is started, so you can test things with no risk !  
+
+![virtual inmoov screenshot](http://www.myai.cloud/pic/virtual.png)
   
 To start using the Finger Starter with real hardware, set :  
  ( The Finger Starter is considered here to be right index, so make sure your servo is connected to pin3 of you Arduino )  
