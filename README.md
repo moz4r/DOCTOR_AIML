@@ -22,7 +22,7 @@ voice command sample : OPEN HAND
 
 Check your configuration inside Inmoov.config ( exemple to change english to french )  
 If you setup 2 arduino + configs in skeleton folder, it can run full Inmoov or separated parts ( right hand / head ... )  
-   
+
   
 ### DOCUMENTATION & HELP  
 http://myrobotlab.org/service/InMoov  
