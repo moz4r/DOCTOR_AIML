@@ -2,14 +2,14 @@
 
 This is the full configurable internationnal launcher script for Inmoov service.  
 Worky out of the box with standardized InMoov hardware configuration.  
-At this time ( v 1.0.0 ) , configurable things are inside the config folder.  
+
 
 ![virtual inmoov screenshot](http://www.myai.cloud/pic/main.png)
 
 ## Getting Started
 MORE informations here : http://myrobotlab.org/service/InMoov  
   
-At this time configurable things are inside the config folder.  
+At this time ( v 1.0.0 ) , configurable things are inside the config folder.   
 By default virtual environment is started, so you can test things with no risk !  
 
 ![virtual inmoov screenshot](http://www.myai.cloud/pic/virtual.png)
